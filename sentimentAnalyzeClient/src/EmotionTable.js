@@ -12,7 +12,7 @@ class EmotionTable extends React.Component {
                 return (
                   <tr>
                     <td>{entry[0]}</td>
-                    <td>{entry[1]}</td>
+                    <td>{ parseFloat(entry[1]).toFixed(2)+'%' }</td>
                   </tr>
                 );
               })
