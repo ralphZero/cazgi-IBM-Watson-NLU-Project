@@ -1,5 +1,25 @@
 const express = require('express');
 const app = new express();
+const dotenv = require('dotenv');
+dotenv.config();
+
+const getNLUInstance = () => {
+    const api_key = process.env.API_KEY;
+    const api_url = process.env.API_URL;
+
+    const NaturalLanguageUnderstandingV1 = require('ibm-watson/natural-language-understanding/v1');
+    const { IamAuthenticator } = require('ibm-watson/auth');
+
+    const nlu = new NaturalLanguageUnderstandingV1({
+        version: '2021-03-25',
+        authenticator: new IamAuthenticator({
+            apikey: api_key
+        }),
+        serviceUrl: api_url
+    });
+
+    return nlu;
+}
 
 app.use(express.static('client'))
 
@@ -8,23 +28,82 @@ app.use(cors_app());
 
 app.get("/",(req,res)=>{
     res.render('index.html');
-  });
+});
 
 app.get("/url/emotion", (req,res) => {
-
-    return res.send({"happy":"90","sad":"10"});
+    const url = req.query.url;
+    if(url) {
+        getNLUInstance().analyze({
+            features: {
+                emotion: {
+                    document: true
+                }
+            },
+            url
+        }).then((response) => {
+            const emotions = response.result.emotion.document.emotion;
+            return res.send(emotions);
+        });
+    } else {
+        return res.status(400).send({error: 'No query'})
+    }
 });
 
 app.get("/url/sentiment", (req,res) => {
-    return res.send("url sentiment for "+req.query.url);
+    const url = req.query.url;
+    if(url) {
+        getNLUInstance().analyze({
+            features: {
+                sentiment: {
+                    document: true
+                }
+            },
+            url
+        }).then((response) => {
+            const label = response.result.sentiment.document.label;
+            return res.send(label);
+        });
+    } else {
+        return res.status(400).send({error: 'No query'})
+    }
 });
 
 app.get("/text/emotion", (req,res) => {
-    return res.send({"happy":"10","sad":"90"});
+    const text = req.query.text;
+    if(text) {
+        getNLUInstance().analyze({
+            features: {
+                emotion: {
+                    document: true
+                }
+            },
+            text
+        }).then((response) => {
+            const emotions = response.result.emotion.document.emotion;
+            return res.send(emotions);
+        });
+    } else {
+        return res.status(400).send({error: 'No query'})
+    }
 });
 
 app.get("/text/sentiment", (req,res) => {
-    return res.send("text sentiment for "+req.query.text);
+    const text = req.query.text;
+    if(text) {
+        getNLUInstance().analyze({
+            features: {
+                sentiment: {
+                    document: true
+                }
+            },
+            text
+        }).then((response) => {
+            const label = response.result.sentiment.document.label;
+            return res.send(label);
+        });
+    } else {
+        return res.status(400).send({error: 'No query'})
+    }
 });
 
 let server = app.listen(8080, () => {
